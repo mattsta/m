@@ -1,0 +1,63 @@
+# Small MoE configuration for geometric signal learning
+model:
+  n_layers: 4
+  input_dim: 1   # Single signal value per time step
+  target_dim: 1  # Single signal prediction per time step
+  pool: "none"   # No pooling for sequence-to-sequence regression
+  
+  block:
+    use_rms_norm: true
+    
+    attn:
+      n_heads: 4
+      causal: true
+      use_rope: true
+      use_rms_norm: true
+      init: "scaled_xavier"
+      rope_max_seq_len: 256
+      
+    moe:
+      d_model: 128  # Small model dimension
+      
+      router:
+        n_experts: 8   # Small number of experts
+        k: 2          # Select top-2 experts
+        use_rms_norm: true
+        load_balance_weight: 0.01
+        router_type: "topk"
+        
+      expert:
+        d_model: 128
+        d_hidden: 512     # 4x expansion in FFN
+        activation: "swiglu"
+        init: "scaled_xavier"
+        dropout: 0.1
+
+training:
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.01
+  warmup_steps: 1000
+  max_steps: 50000
+  scheduler: "cosine_with_warmup"
+  gradient_clip_norm: 1.0
+  eval_interval: 1000
+  save_interval: 5000
+  
+  # Gradient accumulation for effective larger batch
+  gradient_accumulation_steps: 2
+  
+  # Mixed precision training  
+  mixed_precision: false  # Keep false for CPU compatibility
+
+dataset:
+  type: "mixed"  # Mix of sine, composite, and geometric signals
+  sequence_length: 128
+  prediction_length: 32
+  num_samples: 100000
+  sampling_rate: 100.0
+  
+optimizer:
+  type: "adamw"
+  betas: [0.9, 0.95]
+  eps: 1e-8

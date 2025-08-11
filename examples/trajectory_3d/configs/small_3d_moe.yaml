@@ -1,0 +1,83 @@
+# Small 3D Trajectory MoE Configuration
+# Fast training for experimentation with 3D trajectory learning
+
+model:
+  n_layers: 4
+  input_dim: 3      # x, y, z coordinates
+  target_dim: 3     # predict x, y, z positions
+  pool: "none"      # No pooling - use all sequence positions for prediction
+  
+  block:
+    use_rms_norm: true
+    
+    attn:
+      n_heads: 8
+      attn_dropout: 0.1
+      resid_dropout: 0.1
+      bias: true
+      causal: true
+      use_rope: true
+      rope_max_seq_len: 256
+      
+    moe:
+      d_model: 256
+      
+      router:
+        n_experts: 8
+        k: 2
+        router_type: "topk"
+        temperature: 1.0
+        use_rms_norm: true
+        load_balance_weight: 0.1
+        
+      expert:
+        expert_type: "ffn"
+        d_model: 256
+        d_hidden: 512
+        activation: "gelu"
+        dropout: 0.1
+        init: "scaled_xavier"
+
+training:
+  batch_size: 32
+  learning_rate: 0.001
+  max_steps: 20000
+  warmup_steps: 1000
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  
+  # Learning rate schedule
+  lr_schedule: "cosine"
+  min_learning_rate: 0.0001
+  
+  # Evaluation
+  eval_interval: 500
+  eval_steps: 100
+  save_interval: 2000
+  
+  # MoE specific
+  aux_loss_weight: 0.1
+  load_balance_weight: 0.1
+
+dataset:
+  sequence_length: 64     # Input trajectory length  
+  prediction_length: 16   # Predict next 16 3D positions
+  sampling_rate: 50.0     # 50 Hz sampling
+  noise_std: 0.02         # Small amount of noise
+  
+  # Trajectory type distribution
+  helical_weight: 0.2     # DNA helix, spirals
+  orbital_weight: 0.2     # Planetary motion, ellipses
+  lissajous_weight: 0.2   # 3D harmonic oscillations
+  lorenz_weight: 0.2      # Chaotic attractors
+  robotic_weight: 0.2     # Smooth robotic trajectories
+
+logging:
+  project: "trajectory_3d_moe"
+  run_name: "small_3d_moe"
+  log_interval: 50
+  save_visualizations: true
+  
+output:
+  base_dir: "outputs/trajectory_3d"
+  experiment_name: "small_3d_moe"

@@ -1,0 +1,65 @@
+# Quick test config for rich training integration
+model:
+  n_layers: 2
+  input_dim: 1
+  target_dim: 1
+  pool: "mean"
+  
+  block:
+    use_rms_norm: true
+    
+    attn:
+      n_heads: 4
+      causal: true
+      use_rope: true
+      use_rms_norm: true
+      init: "scaled_xavier"
+      rope_max_seq_len: 128
+      attn_dropout: 0.0
+      resid_dropout: 0.0
+      bias: true
+      
+    moe:
+      d_model: 64
+      
+      router:
+        n_experts: 4
+        k: 2
+        use_rms_norm: true
+        load_balance_weight: 0.1
+        router_type: "topk"
+        temperature: 1.0
+        
+      expert:
+        expert_type: "ffn"
+        d_model: 64
+        d_hidden: 128
+        activation: "gelu"
+        dropout: 0.0
+        init: "scaled_xavier"
+
+training:
+  learning_rate: 0.01
+  batch_size: 16
+  max_steps: 100  # Very short for testing
+  eval_interval: 25
+  save_interval: 50
+  gradient_clip_norm: 1.0
+  weight_decay: 0.0
+
+dataset:
+  type: "mixed"
+  sequence_length: 32
+  prediction_length: 8
+  num_samples: 1000
+  sampling_rate: 50.0
+
+optimizer:
+  type: "adamw"
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+experiment_name: "rich_test"
+output_dir: "outputs/geometric_signals"
+seed: 42
+device: "auto"

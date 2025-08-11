@@ -1,0 +1,59 @@
+# Dense baseline configuration (no MoE) for comparison
+model:
+  n_layers: 6
+  input_dim: 1
+  target_dim: 1
+  
+  block:
+    use_rms_norm: true
+    
+    attn:
+      n_heads: 8
+      causal: true
+      use_rope: true
+      use_rms_norm: true
+      init: "scaled_xavier"
+      rope_max_seq_len: 256
+      
+    moe:
+      d_model: 512
+      
+      router:
+        n_experts: 1   # Single "expert" = dense FFN
+        k: 1
+        use_rms_norm: true
+        load_balance_weight: 0.0  # No load balancing needed
+        router_type: "topk"
+        
+      expert:
+        d_model: 512
+        d_hidden: 2048
+        activation: "swiglu"
+        init: "scaled_xavier"
+        dropout: 0.1
+
+training:
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.01
+  warmup_steps: 1500
+  max_steps: 75000
+  scheduler: "cosine_with_warmup"
+  gradient_clip_norm: 1.0
+  eval_interval: 1500
+  save_interval: 7500
+  
+  gradient_accumulation_steps: 2
+  mixed_precision: false
+
+dataset:
+  type: "mixed"
+  sequence_length: 128
+  prediction_length: 32
+  num_samples: 150000
+  sampling_rate: 100.0
+  
+optimizer:
+  type: "adamw"
+  betas: [0.9, 0.95]
+  eps: 1e-8

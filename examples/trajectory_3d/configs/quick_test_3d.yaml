@@ -1,0 +1,80 @@
+# Quick Test 3D Trajectory Configuration
+# Minimal configuration for rapid testing and development
+
+model:
+  n_layers: 16 # 2
+  input_dim: 3      # x, y, z coordinates
+  target_dim: 3     # predict x, y, z positions
+  pool: "none"
+  
+  block:
+    use_rms_norm: true
+    
+    attn:
+      n_heads: 4
+      attn_dropout: 0.0
+      resid_dropout: 0.0
+      bias: true
+      causal: true
+      use_rope: true
+      rope_max_seq_len: 128
+      
+    moe:
+      d_model: 64
+      
+      router:
+        n_experts: 8 # 4
+        k: 4 # 2 
+        router_type: "topk"
+        temperature: 1.0
+        use_rms_norm: true
+        load_balance_weight: 0.05
+        
+      expert:
+        expert_type: "ffn"
+        d_model: 64
+        d_hidden: 128
+        activation: "gelu"
+        dropout: 0.0
+        init: "scaled_xavier"
+
+training:
+  batch_size: 16
+  learning_rate: 0.01     # Higher LR for quick convergence
+  max_steps: 1000         # Very short training
+  warmup_steps: 50
+  weight_decay: 0.0
+  gradient_clip_norm: 1.0
+  
+  lr_schedule: "constant"
+  
+  # Frequent evaluation for testing
+  eval_interval: 100
+  eval_steps: 10
+  save_interval: 500
+  
+  aux_loss_weight: 0.05
+  load_balance_weight: 0.05
+
+dataset:
+  sequence_length: 32     # Short sequences
+  prediction_length: 8    # Predict few steps
+  sampling_rate: 20.0     # Low sampling rate
+  noise_std: 0.05         # More noise is OK for testing
+  
+  # Focus on simpler trajectory types for testing
+  helical_weight: 0.4
+  orbital_weight: 0.3
+  lissajous_weight: 0.3
+  lorenz_weight: 0.0      # Skip chaotic for quick tests
+  robotic_weight: 0.0     # Skip complex robotic
+
+logging:
+  project: "trajectory_3d_moe"
+  run_name: "quick_test_3d"
+  log_interval: 25
+  save_visualizations: false  # Skip visualizations for speed
+  
+output:
+  base_dir: "outputs/trajectory_3d"
+  experiment_name: "quick_test_3d"

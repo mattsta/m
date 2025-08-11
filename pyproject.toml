@@ -1,0 +1,146 @@
+[project]
+name = "m"
+version = "0.1.0"
+description = "Production-ready Mixture of Experts (MoE) Transformer Platform"
+readme = "README.md"
+authors = [
+    { name = "Matt Stancliff", email = "matt@genges.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "einops>=0.8.1",
+    "fastapi>=0.100.0",
+    "jsonargparse>=4.40.2",
+    "matplotlib>=3.7.0",
+    "numpy>=2.3.2",
+    "pyyaml>=6.0",
+    "rich>=14.1.0",
+    "torch>=2.8.0",
+    "tqdm>=4.67.1",
+    "uvicorn>=0.23.0",
+]
+
+[project.scripts]
+# Training commands
+moe-train = "m.moe:cli_train"
+moe-demo = "m.moe:cli_demo"
+moe-build = "m.moe:cli_build"
+
+# Inference commands  
+moe-serve = "m.inference_server:cli_serve"
+
+# Geometric signals example commands
+signals-demo = "examples.geometric_signals.run_experiments:main"
+signals-train = "examples.geometric_signals.training:main"
+signals-eval = "examples.geometric_signals.evaluation:main"  
+signals-compare = "examples.geometric_signals.run_experiments:main"
+
+# Geometric signals model management
+signals-models = "examples.geometric_signals.model_discovery:main"
+
+# Geometric signals inference (using core platform directly)
+signals-inference-demo = "examples.geometric_signals.inference_demo:main" 
+signals-deploy = "examples.geometric_signals.deploy:main"
+
+# 3D trajectory learning commands
+trajectory-3d-train = "examples.trajectory_3d.training:main"
+trajectory-3d-demo = "examples.trajectory_3d.visualization:demo_main"
+trajectory-3d-eval = "examples.trajectory_3d.evaluation:main"
+trajectory-3d-compare = "examples.trajectory_3d.run_experiments:main"
+
+# 3D trajectory model management
+trajectory-3d-models = "examples.trajectory_3d.model_discovery:main"
+
+# 3D trajectory inference (using core platform directly)
+trajectory-3d-inference-demo = "examples.trajectory_3d.inference_demo:main"
+trajectory-3d-deploy = "examples.trajectory_3d.deploy:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "aiohttp>=3.8.0",
+    "mypy>=1.17.1",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=6.2.1",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.12.8",
+    "types-pyyaml>=6.0.12.20250809",
+    "types-tqdm>=4.67.0.20250809",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["m/"]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = [
+  # convert legacy python syntax to modern syntax
+  "UP",
+  # isort imports
+  "I",
+]
+ignore = ["E402"] # Ignore Module level import not at top of file
+
+[tool.pytest.ini_options]
+# Test discovery patterns
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+# Test directories
+testpaths = ["tests"]
+
+# Output options
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+    "--color=yes",
+    "--cov=m",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+]
+
+# Markers for test categorization
+markers = [
+    "asyncio: marks async tests",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests that require GPU",
+    "distributed: marks distributed training tests",
+    "inference: marks inference-specific tests",
+    "integration: marks integration tests",
+    "unit: marks unit tests",
+]
+
+# Asyncio configuration
+asyncio_mode = "auto"
+
+# Timeout for tests (in seconds)
+timeout = 300
+timeout_method = "thread"
+
+[tool.coverage.run]
+source = ["m"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
